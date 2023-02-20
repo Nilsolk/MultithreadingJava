@@ -1,39 +1,25 @@
+import java.util.ArrayList;
+import java.util.List;
+
 public class Main {
-    public static void main(String[] args) {
-        Printer printer = new Printer();
+    private static final String URL = "https://www.cleverfiles.com/howto/wp-content/uploads/2018/03/minion.jpg";
 
-        Downloader downloader = new Downloader("https://i.pinimg.com/236x/8a/de/fe/8adefe5af862b4f9cec286c6ee4722cb.jpg");
+    public static void main(String[] args) throws InterruptedException {
+        ShowBytesCallBack.Base showBytesCallBack = new ShowBytesCallBack.Base();
 
-        Runnable firstPrinter = () -> {
-            try {
-                printer.print(10, "first");
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        };
+        List<Thread> list = new ArrayList<>();
+        list.add(new Downloader(showBytesCallBack, "firstImage"));
+        list.add(new Downloader(URL, showBytesCallBack, "secondImage"));
+        list.add(new Downloader(showBytesCallBack, "firstImage"));
+        list.add(new Downloader(URL, showBytesCallBack, "firstImage"));
 
-        Runnable secondPrinter = () -> {
-            try {
-                printer.print(5, "second");
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        };
+        for (Thread thread : list) {
+            thread.start();
+        }
 
-        Thread first = new Thread(firstPrinter);
-        Thread second = new Thread(secondPrinter);
-        Thread download = new Thread(downloader);
-
-
-        Thread.yield();
-        first.setName("First thread");
-        second.setName("Second name");
-
-        download.start();
-        first.start();
-        second.start();
-        System.out.println(Thread.currentThread().getName());
-
-
+        for (Thread thread : list) {
+            thread.join();
+        }
+        showBytesCallBack.totalBytes(System.out);
     }
 }
